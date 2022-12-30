@@ -27,17 +27,28 @@ if __name__ == '__main__':
     last_login = f.read()
   cache_login()
 
+  def execute(entry):
+    cmd = entry.widget.get()
+    if cmd != "":
+      print("psh: command not found: " + cmd)
+      write_response(entry)
+
+  def write_response(entry):
+    response.config(state="normal")
+    response.insert(tk.END, "Text goes here")
+    response.config(state="disabled")
+
   root = tk.Tk()
   root.geometry("569x343")
   root.title("User — client@users — ~ — -psh — 80x24")
   root.resizable(False, False)
 
-  entry = tk.Entry(root,
-                   width=70,
-                   font=("Courier", 14),
-                   highlightthickness=0,
-                   borderwidth=0)
-  entry.place(anchor=tk.NW, x=20, y=22)
+  cmd = tk.Entry(root,
+                 width=70,
+                 font=("Courier", 14),
+                 highlightthickness=0,
+                 borderwidth=0)
+  cmd.place(anchor=tk.NW, x=20, y=22)
 
   label = tk.Label(root, 
                    text=f"Last login: {last_login} on ttys",
@@ -49,6 +60,15 @@ if __name__ == '__main__':
                     font=("Courier", 14))
   prompt.place(anchor=tk.NW, x=0, y=22)
 
-  entry.focus_set()
+  response = tk.Text(root,
+                     width=66,
+                     font=("Courier", 14))
+  response.place(anchor=tk.NW,
+                 x=15,
+                 y=44,
+                 height=283)
 
+  cmd.focus_set()
+  cmd.bind("<Return>", execute)
+  
   root.mainloop()
