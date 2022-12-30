@@ -49,4 +49,6 @@ if __name__ == '__main__':
                     font=("Courier", 14))
   prompt.place(anchor=tk.NW, x=0, y=22)
 
+  entry.focus_set()
+
   root.mainloop()
