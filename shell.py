@@ -60,7 +60,7 @@ if __name__ == '__main__':
     elif re.search(r"\btouch\b", command):
       touch_command(command)
     elif re.search(r"\bmkdir\b", command):
-      pass
+      mkdir_command(command)
     else:
       write_response("psh: command not found: " + command)
   
@@ -106,6 +106,23 @@ if __name__ == '__main__':
         break
     else:
       cwd.append(touched_file)
+
+    ls_command()
+
+  def mkdir_command(command):
+    actions = command.split()
+
+    if len(actions) != 2:
+      write_response("psh: command not found: " + command)
+      return
+    
+    mkdir = Directory(actions[-1])
+    for i in range(len(cwd)):
+      if repr(cwd[i]) == repr(mkdir):
+        cwd[i] = mkdir
+        break
+    else:
+      cwd.append(mkdir)
 
     ls_command()
 
