@@ -55,29 +55,12 @@ if __name__ == '__main__':
     command = entry.widget.get()
     if re.search(r"\bls\b", command):
       ls_command()
+    elif re.search(r"\becho\b", command):
+      echo_command(command)
     elif re.search(r"\btouch\b", command):
-      actions = command.split()
-
-      if len(actions) != 2:
-        write_response("psh: command not found: " + command)
-        return
-
-      file_name, file_type = actions[-1].split(".")
-      
-      if re.search(r"\btxt\b", file_type) == None:
-        write_response("psh: file not supported: " + "."+ file_type)
-        return
-
-      touched_file = File(file_name + "." + file_type)
-      for i in range(len(cwd)):
-        if repr(cwd[i]) == repr(touched_file):
-          cwd[i] = touched_file
-          break
-      else:
-        cwd.append(touched_file)
-
-      ls_command()
-
+      touch_command(command)
+    elif re.search(r"\bmkdir\b", command):
+      pass
     else:
       write_response("psh: command not found: " + command)
   
@@ -92,6 +75,39 @@ if __name__ == '__main__':
       
     response.delete("end-2c")
     response.config(state="disabled")
+
+  def echo_command(command):
+    actions = command.split()
+
+    if len(actions) != 2:
+      write_response("psh: command not found: " + command)
+      return
+    
+    actions[-1] = re.sub(r"[\'\"]", "", actions[-1])
+    write_response(actions[-1])
+
+  def touch_command(command):
+    actions = command.split()
+
+    if len(actions) != 2:
+      write_response("psh: command not found: " + command)
+      return
+
+    file_name, file_type = actions[-1].split(".")
+
+    if re.search(r"\btxt\b", file_type) == None:
+      write_response("psh: file not supported: " + "."+ file_type)
+      return
+
+    touched_file = File(file_name + "." + file_type)
+    for i in range(len(cwd)):
+      if repr(cwd[i]) == repr(touched_file):
+        cwd[i] = touched_file
+        break
+    else:
+      cwd.append(touched_file)
+
+    ls_command()
 
   def write_response(text):
     response.config(state="normal")
