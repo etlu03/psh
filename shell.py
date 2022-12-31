@@ -2,6 +2,28 @@ import re
 import tkinter as tk
 from datetime import date, datetime
 
+class Directory:
+  def __init__(self, dir_name):
+    self.dir_name = dir_name
+    self.children = []
+  
+  def __repr__(self):
+    return self.dir_name
+
+  def add_child(self, obj):
+    self.child.append(obj)
+
+class File:
+  def __init__(self, file_name):
+    self.file_name = file_name
+    self.content = str()
+  
+  def __repr__(self):
+    return self.file_name
+  
+  def cat(self, text):
+    self.content += text
+
 def cache_login():
   weekdays = {0: 'Mon',
               1: 'Tue',
@@ -30,12 +52,23 @@ if __name__ == '__main__':
 
   def execute(entry):
     clear_response()
-    cmd = entry.widget.get()
-    if re.search(r"ls", cmd):
-      shell_response = ' '.join(cwd)
-      write_response(shell_response)
+    command = entry.widget.get()
+    if re.search(r"ls", command):
+      ls_command()
     else:
-      write_response("psh: command not found: " + cmd)
+      write_response("psh: command not found: " + command)
+  
+  def ls_command():
+    response.config(state="normal")
+    for obj in cwd:
+      if isinstance(obj, Directory):
+        response.insert(tk.END, f"{repr(obj)} ", "is_directory")
+      
+      if isinstance(obj, File):
+        response.insert(tk.END, f"{repr(obj)} ", "is_file")
+      
+    response.delete("end-2c")
+    response.config(state="disabled")
 
   def write_response(text):
     response.config(state="normal")
@@ -77,7 +110,10 @@ if __name__ == '__main__':
                  y=44,
                  height=283)
   
-  cwd = ["public", "private"]
+  response.tag_config('is_directory', foreground="blue")
+  response.tag_config('is_file', foreground="black")
+
+  cwd = [Directory("public"), Directory("private")]
 
   cmd.focus_set()
   cmd.bind("<Return>", execute)
