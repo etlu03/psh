@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from datetime import date, datetime
 
@@ -28,16 +29,24 @@ if __name__ == '__main__':
   cache_login()
 
   def execute(entry):
+    clear_response()
     cmd = entry.widget.get()
-    if cmd != "":
-      print("psh: command not found: " + cmd)
-      write_response(entry)
+    if re.search(r"ls", cmd):
+      shell_response = ' '.join(cwd)
+      write_response(shell_response)
+    else:
+      write_response("psh: command not found: " + cmd)
 
-  def write_response(entry):
+  def write_response(text):
     response.config(state="normal")
-    response.insert(tk.END, "Text goes here")
+    response.insert(tk.END, f"{text}")
     response.config(state="disabled")
-
+  
+  def clear_response():
+    response.config(state="normal")
+    response.delete("1.0", "end")
+    response.config(state="disabled")
+  
   root = tk.Tk()
   root.geometry("569x343")
   root.title("User — client@users — ~ — -psh — 80x24")
@@ -67,6 +76,8 @@ if __name__ == '__main__':
                  x=15,
                  y=44,
                  height=283)
+  
+  cwd = ["public", "private"]
 
   cmd.focus_set()
   cmd.bind("<Return>", execute)
