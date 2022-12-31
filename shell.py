@@ -53,8 +53,31 @@ if __name__ == '__main__':
   def execute(entry):
     clear_response()
     command = entry.widget.get()
-    if re.search(r"ls", command):
+    if re.search(r"\bls\b", command):
       ls_command()
+    elif re.search(r"\btouch\b", command):
+      actions = command.split()
+
+      if len(actions) != 2:
+        write_response("psh: command not found: " + command)
+        return
+
+      file_name, file_type = actions[-1].split(".")
+      
+      if re.search(r"\btxt\b", file_type) == None:
+        write_response("psh: file not supported: " + "."+ file_type)
+        return
+
+      touched_file = File(file_name + "." + file_type)
+      for i in range(len(cwd)):
+        if repr(cwd[i]) == repr(touched_file):
+          cwd[i] = touched_file
+          break
+      else:
+        cwd.append(touched_file)
+
+      ls_command()
+
     else:
       write_response("psh: command not found: " + command)
   
