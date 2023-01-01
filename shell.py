@@ -16,7 +16,7 @@ class Directory:
 class File:
   def __init__(self, file_name):
     self.file_name = file_name
-    self.content = str()
+    self.content = ""
   
   def __repr__(self):
     return self.file_name
@@ -61,6 +61,8 @@ if __name__ == '__main__':
       touch_command(command)
     elif re.search(r"\bmkdir\b", command):
       mkdir_command(command)
+    elif re.search(r"\bcd\b", command):
+      cd_command(command)
     else:
       write_response("psh: command not found: " + command)
   
@@ -79,19 +81,11 @@ if __name__ == '__main__':
   def echo_command(command):
     actions = command.split()
 
-    if len(actions) != 2:
-      write_response("psh: command not found: " + command)
-      return
-    
     actions[-1] = re.sub(r"[\'\"]", "", actions[-1])
     write_response(actions[-1])
 
   def touch_command(command):
     actions = command.split()
-
-    if len(actions) != 2:
-      write_response("psh: command not found: " + command)
-      return
 
     file_name, file_type = actions[-1].split(".")
 
@@ -112,10 +106,6 @@ if __name__ == '__main__':
   def mkdir_command(command):
     actions = command.split()
 
-    if len(actions) != 2:
-      write_response("psh: command not found: " + command)
-      return
-    
     mkdir = Directory(actions[-1])
     for i in range(len(cwd)):
       if repr(cwd[i]) == repr(mkdir):
@@ -125,6 +115,20 @@ if __name__ == '__main__':
       cwd.append(mkdir)
 
     ls_command()
+
+  def cd_command(command):
+    actions = command.split()
+    
+    cd_dir = actions[-1]
+    
+    global cwd
+    for obj in cwd:
+      if repr(obj) == cd_dir:
+        cwd = obj.children
+        if cwd == []:
+          print("Success")
+    else:
+      pass
 
   def write_response(text):
     response.config(state="normal")
