@@ -11,7 +11,7 @@ class Directory:
     return self.dir_name
 
   def add_child(self, obj):
-    self.child.append(obj)
+    self.children.append(obj)
 
 class File:
   def __init__(self, file_name):
@@ -118,17 +118,24 @@ if __name__ == '__main__':
 
   def cd_command(command):
     actions = command.split()
-    
+    global cwd, path
+
+    if len(actions) == 1:
+      for _ in range(len(path) - 1):
+        path.pop(-1)
+      
+      cwd = (path[0]).children
+      return
+
     cd_dir = actions[-1]
-    
-    global cwd
+  
     for obj in cwd:
       if repr(obj) == cd_dir:
         cwd = obj.children
-        if cwd == []:
-          print("Success")
+        path.append(obj)
+        break
     else:
-      pass
+      write_response("cd: no such file or directory: " + cd_dir)
 
   def write_response(text):
     response.config(state="normal")
@@ -173,7 +180,12 @@ if __name__ == '__main__':
   response.tag_config('is_directory', foreground="blue")
   response.tag_config('is_file', foreground="black")
 
-  cwd = [Directory("public"), Directory("private")]
+  home = Directory("~")
+  public, private = Directory("public"), Directory("private")
+  home.add_child(public)
+  home.add_child(private)
+  cwd = [public, private]
+  path = [home]
 
   cmd.focus_set()
   cmd.bind("<Return>", execute)
