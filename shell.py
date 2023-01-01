@@ -81,8 +81,10 @@ if __name__ == '__main__':
   def echo_command(command):
     actions = command.split()
 
-    actions[-1] = re.sub(r"[\'\"]", "", actions[-1])
-    write_response(actions[-1])
+    for i in range(1, len(actions)):
+      actions[i] = re.sub(r"[\'\"]", "", actions[i])
+
+    write_response(' '.join(actions[1:]))
 
   def touch_command(command):
     actions = command.split()
@@ -90,7 +92,7 @@ if __name__ == '__main__':
     file_name, file_type = actions[-1].split(".")
 
     if re.search(r"\btxt\b", file_type) == None:
-      write_response("psh: file not supported: " + "."+ file_type)
+      write_response("psh: file type not supported: " + "."+ file_type)
       return
 
     touched_file = File(file_name + "." + file_type)
@@ -130,7 +132,6 @@ if __name__ == '__main__':
         path.pop(-1)
       
       cwd = path[0].children
-      print(path)
       return
 
     if actions[-1] == "..":
@@ -146,7 +147,6 @@ if __name__ == '__main__':
       if repr(obj) == cd_dir:
         cwd = obj.children
         path.append(obj)
-        print(path)
         break
     else:
       write_response("cd: no such file or directory: " + cd_dir)
