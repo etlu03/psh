@@ -106,14 +106,15 @@ if __name__ == '__main__':
 
   def mkdir_command(command):
     actions = command.split()
+    dirs = actions[1:]
 
-    mkdir = Directory(actions[-1])
-    for i in range(len(cwd)):
-      if repr(cwd[i]) == repr(mkdir):
-        cwd[i] = mkdir
-        break
-    else:
-      cwd.append(mkdir)
+    global cwd
+    for directory in dirs:
+      for obj in cwd:
+        if repr(obj) == directory:
+          break
+      else:
+        cwd.append(Directory(directory))
 
     ls_command()
 
@@ -195,8 +196,10 @@ if __name__ == '__main__':
 
   home = Directory("~")
   public, private = Directory("public"), Directory("private")
+
   home.add_child(public)
   home.add_child(private)
+
   cwd = [public, private]
   path = [home]
 
