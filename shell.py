@@ -79,7 +79,11 @@ if __name__ == '__main__':
     response.config(state="disabled")
 
   def echo_command(command):
-    actions = command.split()
+    actions = command.split(maxsplit=2)
+
+    if 2 < len(actions):
+      write_response("echo: too many arguments")
+      return
 
     for i in range(1, len(actions)):
       actions[i] = re.sub(r"[\'\"]", "", actions[i])
@@ -88,20 +92,15 @@ if __name__ == '__main__':
 
   def touch_command(command):
     actions = command.split()
+    files = actions[1:]
 
-    file_name, file_type = actions[-1].split(".")
-
-    if re.search(r"\btxt\b", file_type) == None:
-      write_response("psh: file type not supported: " + "."+ file_type)
-      return
-
-    touched_file = File(file_name + "." + file_type)
-    for i in range(len(cwd)):
-      if repr(cwd[i]) == repr(touched_file):
-        cwd[i] = touched_file
-        break
-    else:
-      cwd.append(touched_file)
+    global cwd
+    for f in files:
+      for obj in cwd:
+        if repr(obj) == f:
+          break
+      else:
+        cwd.append(File(f))
 
     ls_command()
 
