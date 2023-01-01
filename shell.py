@@ -120,19 +120,33 @@ if __name__ == '__main__':
     actions = command.split()
     global cwd, path
 
-    if len(actions) == 1:
+    if 2 < len(actions):
+      write_response("cd: too many arguments")
+      return
+
+    if len(actions) == 1 or actions[-1] == "~":
+      # `cd` or `cd ~`
       for _ in range(len(path) - 1):
         path.pop(-1)
       
-      cwd = (path[0]).children
+      cwd = path[0].children
+      print(path)
       return
 
-    cd_dir = actions[-1]
+    if actions[-1] == "..":
+      # `cd ..`
+      if len(path) != 1:
+        path.pop()
+        cwd = path[-1].children
+      return
   
+    cd_dir = actions[-1]
     for obj in cwd:
+      # `cd {cd_dir}`
       if repr(obj) == cd_dir:
         cwd = obj.children
         path.append(obj)
+        print(path)
         break
     else:
       write_response("cd: no such file or directory: " + cd_dir)
