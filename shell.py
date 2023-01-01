@@ -63,6 +63,8 @@ if __name__ == '__main__':
       mkdir_command(command)
     elif re.search(r"\bcd\b", command):
       cd_command(command)
+    elif re.search(r"\bcat\b", command):
+      cat_command(command)
     else:
       write_response("psh: command not found: " + command)
   
@@ -79,16 +81,31 @@ if __name__ == '__main__':
     response.config(state="disabled")
 
   def echo_command(command):
-    actions = command.split(maxsplit=2)
+    actions = command.split(maxsplit=1)
+    redirection = actions[-1].split(">>")
 
-    if 2 < len(actions):
-      write_response("echo: too many arguments")
-      return
+    if len(redirection) == 2:
+      content = redirection[0].strip()
+      file_name = redirection[-1].strip()
+      print(content)
 
-    for i in range(1, len(actions)):
-      actions[i] = re.sub(r"[\'\"]", "", actions[i])
+      global cwd
+      for obj in cwd:
+        if repr(obj) == file_name:
+          obj.cat(content + "\n")
+          break
+      else:
+        created_file = File(file_name)
+        cwd.append(created_file)
 
-    write_response(' '.join(actions[1:]))
+        obj.content = content
+
+      ls_command()
+    else:
+      for i in range(1, len(actions)):
+        actions[i] = re.sub(r"[\'\"]", "", actions[i])
+
+      write_response(' '.join(actions[1:]))
 
   def touch_command(command):
     actions = command.split()
@@ -151,6 +168,18 @@ if __name__ == '__main__':
     else:
       write_response("cd: no such file or directory: " + cd_dir)
 
+  def cat_command(command):
+    actions = command.split(maxsplit=1)
+    file_name = actions[-1]
+
+    global cwd
+    for obj in cwd:
+      if repr(obj) == file_name:
+        write_response(obj.content)
+        break
+    else:
+      write_response("psh: file does not exist: " + file_name)
+
   def write_response(text):
     response.config(state="normal")
     response.insert(tk.END, f"{text}")
@@ -166,12 +195,23 @@ if __name__ == '__main__':
   root.title("User — client@users — ~ — -psh — 80x24")
   root.resizable(False, False)
 
+  response = tk.Text(root,
+                     width=66,
+                     font=("Courier", 14))
+  response.place(anchor=tk.NW,
+                 x=17,
+                 y=35,
+                 height=283)
+  
+  response.tag_config('is_directory', foreground="blue")
+  response.tag_config('is_file', foreground="black")
+
   cmd = tk.Entry(root,
                  width=70,
                  font=("Courier", 14),
                  highlightthickness=0,
                  borderwidth=0)
-  cmd.place(anchor=tk.NW, x=20, y=22)
+  cmd.place(anchor=tk.NW, x=20, y=23)
 
   label = tk.Label(root, 
                    text=f"Last login: {last_login} on ttys",
@@ -181,18 +221,7 @@ if __name__ == '__main__':
   prompt = tk.Label(root,
                     text=">",
                     font=("Courier", 14))
-  prompt.place(anchor=tk.NW, x=0, y=22)
-
-  response = tk.Text(root,
-                     width=66,
-                     font=("Courier", 14))
-  response.place(anchor=tk.NW,
-                 x=15,
-                 y=44,
-                 height=283)
-  
-  response.tag_config('is_directory', foreground="blue")
-  response.tag_config('is_file', foreground="black")
+  prompt.place(anchor=tk.NW, x=0, y=21)
 
   home = Directory("~")
   public, private = Directory("public"), Directory("private")
