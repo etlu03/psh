@@ -122,14 +122,14 @@ if __name__ == '__main__':
             response.insert(tk.END, d + ":\n")
             for child in obj.children:
               if isinstance(child, Directory):
-                response.insert(tk.END, f"{repr(obj)} ", "is_directory")
+                response.insert(tk.END, f"{repr(child)} ", "is_directory")
         
               if isinstance(child, File):
-                response.insert(tk.END, f"{repr(obj)} ", "is_file")
-              response.insert(tk.END, "\n")
+                response.insert(tk.END, f"{repr(child)} ", "is_file")
 
           if isinstance(obj, File):
-            response.insert(tk.END, f"{repr(obj)} ", "is_file")
+            response.insert(tk.END, f"{repr(child)} ", "is_file")
+    response.config(state="disabled")
 
 
   ##############################################################################
@@ -159,7 +159,6 @@ if __name__ == '__main__':
 
         obj.content = content
 
-      ls_command()
     else:
       # `echo {content}`
       content = actions[1:]
@@ -185,8 +184,6 @@ if __name__ == '__main__':
       else:
         cwd.append(File(f))
 
-    ls_command()
-
   ##############################################################################
   # @brief     Mimics the `mkdir` command on Unix-like systems
   # @param[in] command
@@ -203,7 +200,6 @@ if __name__ == '__main__':
           break
       else:
         cwd.append(Directory(directory))
-        ls_command()
 
   ##############################################################################
   # @brief     Mimics the `cd` command on Unix-like systems
@@ -303,7 +299,6 @@ if __name__ == '__main__':
       else:
         if cwd[i].children == []:
           cwd.pop(i)
-          ls_command()
         else:
           write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty")
         break
