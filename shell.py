@@ -10,7 +10,6 @@ class Directory:
   def __repr__(self):
     return self.dir_name
 
-  # insert this function when a new file or directory is made
   def add_child(self, obj):
     self.children.append(obj)
 
@@ -178,11 +177,11 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def touch_command(command):
+    # `touch {files}`
     actions = command.split()
     files = actions[1:]
 
     global cwd
-    # `touch {files}`
     for f in files:
       for obj in cwd:
         if repr(obj) == f:
@@ -195,6 +194,7 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def mkdir_command(command):
+    # `mkdir {directories}`
     actions = command.split()
     directories = actions[1:]
 
@@ -249,13 +249,17 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def cat_command(command):
+    # `mkdir {file_name}`
     actions = command.split(maxsplit=1)
     file_name = actions[1]
 
     global cwd
     for obj in cwd:
       if repr(obj) == file_name:
-        write_response(obj.content)
+        if isinstance(obj, File):
+          write_response(obj.content)
+        else:
+          write_response("cat: " + repr(obj) + ": Is a directory")
         break
     else:
       write_response("psh: file does not exist: " + file_name)
@@ -296,10 +300,10 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def rmdir_command(command):
+    # `mkdir {directories}`
     actions = command.split()
     directories = actions[1:]
-    i = 0
-
+  
     global cwd
     for directory in directories:
       for i in range(len(cwd)):
