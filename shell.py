@@ -69,6 +69,14 @@ if __name__ == '__main__':
       rm_command(command)
     else:
       write_response("psh: command not found: " + command)
+      cmd.delete(0, tk.END)
+    
+    global history, pointer
+    history.append(command)
+    pointer = len(history) - 1
+
+    if 5 < len(history):
+      history.pop(0)
   
   def ls_command():
     response.config(state="normal")
@@ -202,6 +210,22 @@ if __name__ == '__main__':
           ls_command()
         break
 
+  def up_history(entry):
+    global pointer
+    if 0 < pointer:
+      pointer -= 1
+
+      cmd.delete(0, tk.END)
+      cmd.insert(0, history[pointer])
+  
+  def down_history(entry):
+    global pointer
+    if pointer < (len(history) - 1):
+      pointer += 1
+
+      cmd.delete(0, tk.END)
+      cmd.insert(0, history[pointer])
+
   def write_response(text):
     response.config(state="normal")
     response.insert(tk.END, f"{text}")
@@ -247,7 +271,8 @@ if __name__ == '__main__':
 
   home = Directory("~")
   public, private = Directory("public"), Directory("private")
-
+  history, pointer = [], 0
+  
   home.add_child(public)
   home.add_child(private)
 
@@ -256,5 +281,7 @@ if __name__ == '__main__':
 
   cmd.focus_set()
   cmd.bind("<Return>", execute)
+  cmd.bind("<Up>", up_history)
+  cmd.bind("<Down>", down_history)
   
   root.mainloop()
