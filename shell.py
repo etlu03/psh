@@ -67,7 +67,6 @@ if __name__ == '__main__':
     if command.strip() == "":
       return
 
-    create_history(command)
     clear_response()
 
     if re.search(r"\bls\b", command):
@@ -90,19 +89,6 @@ if __name__ == '__main__':
       write_response("psh: command not found: " + command)
     
     entry.widget.delete(0, tk.END)
-
-  ##############################################################################
-  # @brief     Builds the command history
-  # @param[in] command
-  ##############################################################################
-  def create_history(command):
-    global history, pointer
-    history.append(command)
-    
-    if 5 < len(history):
-      history.pop(0)
-    
-    pointer = len(history) - 1
       
   ##############################################################################
   # @brief List all the objects in the current working directory
@@ -344,15 +330,6 @@ if __name__ == '__main__':
     response.delete("1.0", "end")
     response.config(state="disabled")
 
-  ##############################################################################
-  # @brief     
-  # @param[in] entry
-  ##############################################################################
-  def manage_history(entry):
-    global pointer
-    
-    print(history, pointer)
-
   root = tk.Tk()
   root.geometry("569x343")
   root.title("User — client@users — ~ — -psh — 80x24")
@@ -390,7 +367,6 @@ if __name__ == '__main__':
 
   home = Directory("~")
   public, private = Directory("public"), Directory("private")
-  history, pointer = [], 0
   
   home.add_child(public)
   home.add_child(private)
@@ -401,6 +377,5 @@ if __name__ == '__main__':
   cmd.focus_set()
 
   cmd.bind("<Return>", execute)
-  cmd.bind("<Up>", manage_history)
   
   root.mainloop()
