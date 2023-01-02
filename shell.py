@@ -115,20 +115,22 @@ if __name__ == '__main__':
     
     response.config(state="normal")
     directories = actions[1].split()
-    for obj in cwd:
-      for d in directories:
+    for d in directories:
+      for obj in cwd:
         if repr(obj) == d:
           if isinstance(obj, Directory):
             response.insert(tk.END, d + ":\n")
             for child in obj.children:
               if isinstance(child, Directory):
                 response.insert(tk.END, f"{repr(child)} ", "is_directory")
-        
+              
               if isinstance(child, File):
                 response.insert(tk.END, f"{repr(child)} ", "is_file")
-
+            
+            response.insert(tk.END, "\n")
           if isinstance(obj, File):
-            response.insert(tk.END, f"{repr(child)} ", "is_file")
+            response.insert(tk.END, d, "is_file")
+            
     response.config(state="disabled")
 
 
