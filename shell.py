@@ -24,6 +24,9 @@ class File:
   def cat(self, text):
     self.content += text
 
+################################################################################
+# @brief Stores the start time of the current session
+################################################################################
 def cache_login():
   weekdays = {0: 'Mon',
               1: 'Tue',
@@ -50,11 +53,15 @@ if __name__ == '__main__':
     last_login = f.read()
   cache_login()
 
+  ##############################################################################
+  # @brief     Manages built-in commands
+  # @param[in] entry
+  ##############################################################################
   def execute(entry):
     clear_response()
     command = entry.widget.get()
     if re.search(r"\bls\b", command):
-      ls_command()
+      ls_command(command)
     elif re.search(r"\becho\b", command):
       echo_command(command)
     elif re.search(r"\btouch\b", command):
@@ -67,12 +74,19 @@ if __name__ == '__main__':
       cat_command(command)
     elif re.search(r"\brm\b", command):
       rm_command(command)
-    elif re.search(r"\b\b", command):
+    elif re.search(r"\brmdir\b", command):
       rmdir_command(command)
     else:
       write_response("psh: command not found: " + command)
-      cmd.delete(0, tk.END)
     
+    create_history(command)
+    cmd.delete(0, tk.END)
+
+  ##############################################################################
+  # @brief     Builds the command history
+  # @param[in] command
+  ##############################################################################
+  def create_history(command):
     global history, pointer
     history.append(command)
     pointer = len(history) - 1
@@ -80,32 +94,61 @@ if __name__ == '__main__':
     if 5 < len(history):
       history.pop(0)
   
-  def ls_command():
+  ##############################################################################
+  # @brief List all the objects in the current working directory
+  # @param[in] command
+  ##############################################################################
+  def ls_command(command):
+    actions = command.split(maxsplit=1)
+    if len(actions) == 1:
+      response.config(state="normal")
+
+      for obj in cwd:
+        if isinstance(obj, Directory):
+          response.insert(tk.END, f"{repr(obj)} ", "is_directory")
+        
+        if isinstance(obj, File):
+          response.insert(tk.END, f"{repr(obj)} ", "is_file")
+
+      response.config(state="disabled")
+      return
+    
     response.config(state="normal")
-
+    directories = actions[1].split()
     for obj in cwd:
-      if isinstance(obj, Directory):
-        response.insert(tk.END, f"{repr(obj)} ", "is_directory")
-      
-      if isinstance(obj, File):
-        response.insert(tk.END, f"{repr(obj)} ", "is_file")
-      
-      if path != [home]:
-        response.insert(tk.END, "\n")
+      for d in directories:
+        if repr(obj) == d:
+          if isinstance(obj, Directory):
+            response.insert(tk.END, d + ":\n")
+            for child in obj.children:
+              if isinstance(child, Directory):
+                response.insert(tk.END, f"{repr(obj)} ", "is_directory")
+        
+              if isinstance(child, File):
+                response.insert(tk.END, f"{repr(obj)} ", "is_file")
+              response.insert(tk.END, "\n")
 
-    response.config(state="disabled")
+          if isinstance(obj, File):
+            response.insert(tk.END, f"{repr(obj)} ", "is_file")
 
+
+  ##############################################################################
+  # @brief     Mimics the `echo` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def echo_command(command):
     actions = command.split(maxsplit=1)
-    redirection = actions[-1].split(">>")
+    redirection = actions[1].split(">>")
 
     if len(redirection) == 2:
+      # `echo {content} >> {file_name}`
+      global cwd
+
       content = redirection[0].strip()
       file_name = redirection[-1].strip()
 
       content = re.sub(r"[\'\"]", "", content)
 
-      global cwd
       for obj in cwd:
         if repr(obj) == file_name:
           obj.cat(content + "\n")
@@ -118,16 +161,23 @@ if __name__ == '__main__':
 
       ls_command()
     else:
-      for i in range(1, len(actions)):
-        actions[i] = re.sub(r"[\'\"]", "", actions[i])
+      # `echo {content}`
+      content = actions[1:]
+      for i in range(len(content)):
+        content[i] = re.sub(r"[\'\"]", "", content[i])
 
       write_response(' '.join(actions[1:]))
 
+  ##############################################################################
+  # @brief     Mimics the `touch` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def touch_command(command):
     actions = command.split()
     files = actions[1:]
 
     global cwd
+    # `touch {files}``
     for f in files:
       for obj in cwd:
         if repr(obj) == f:
@@ -137,6 +187,10 @@ if __name__ == '__main__':
 
     ls_command()
 
+  ##############################################################################
+  # @brief     Mimics the `mkdir` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def mkdir_command(command):
     actions = command.split()
     dirs = actions[1:]
@@ -151,6 +205,10 @@ if __name__ == '__main__':
         cwd.append(Directory(directory))
         ls_command()
 
+  ##############################################################################
+  # @brief     Mimics the `cd` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def cd_command(command):
     actions = command.split()
     global cwd, path
@@ -184,6 +242,10 @@ if __name__ == '__main__':
     else:
       write_response("cd: no such file or directory: " + cd_dir)
 
+  ##############################################################################
+  # @brief     Mimics the `cat` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def cat_command(command):
     actions = command.split(maxsplit=1)
     file_name = actions[-1]
@@ -196,27 +258,39 @@ if __name__ == '__main__':
     else:
       write_response("psh: file does not exist: " + file_name)
 
+  ##############################################################################
+  # @brief     Mimics the `rm` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def rm_command(command):
     actions = command.split(maxsplit=2)
-    dir_name = actions[-1]
-    i = 0
+    dirs = actions[1:]
+    print(dirs)
 
-    if len(actions) == 2:
-      # `rm {dir_name}`
-      global cwd
-      while i < len(cwd):
-        if repr(cwd[i]) != dir_name:
-          i += 1
-        else:
-          if isinstance(cwd[i], Directory):
-            write_response("rm: cannot remove " + "'" +  repr(cwd[i]) + "' : Is a directory")
-          else:
-            cwd.pop(i)
-            ls_command()
-          break
+    global cwd
+    if dirs[0] != "-r":
+      # `rm {dir_names}`
+      for d in dirs:
+        for i in range(len(cwd)):
+          if repr(cwd[i]) == d:
+            if isinstance(cwd[i], Directory):
+              write_response("rm: cannot remove " + repr(cwd[i]) + ": Is a directory\n")
+            else:
+              cwd.pop(i)
+              break
     else:
-      pass
+      for d in dirs[1:]:
+        for i in range(len(cwd)):
+          if repr(cwd[i]) == d:
+            cwd.pop(i)
+            break
+        else:
+          write_response("rm: " + d + ": No such file or directory\n")
 
+  ##############################################################################
+  # @brief     Mimics the `rmdir` command on Unix-like systems
+  # @param[in] command
+  ##############################################################################
   def rmdir_command(command):
     actions = command.split()
     dir_name = actions[-1]
@@ -234,6 +308,27 @@ if __name__ == '__main__':
           write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty")
         break
 
+  ##############################################################################
+  # @brief     Write `text` to the response text widget
+  # @param[in] text
+  ##############################################################################
+  def write_response(text):
+    response.config(state="normal")
+    response.insert(tk.END, f"{text}")
+    response.config(state="disabled")
+  
+  ##############################################################################
+  # @brief Clears the response text widget
+  ##############################################################################
+  def clear_response():
+    response.config(state="normal")
+    response.delete("1.0", "end")
+    response.config(state="disabled")
+
+  ##############################################################################
+  # @brief     Decrements the `history` pointer and restores a previous command 
+  # @param[in] entry
+  ##############################################################################
   def up_history(entry):
     global pointer
     if 0 < pointer:
@@ -242,6 +337,10 @@ if __name__ == '__main__':
       cmd.delete(0, tk.END)
       cmd.insert(0, history[pointer])
   
+  ##############################################################################
+  # @brief     Increments the `history` pointer and restores a previous command 
+  # @param[in] entry
+  ##############################################################################
   def down_history(entry):
     global pointer
     if pointer < (len(history) - 1):
@@ -250,16 +349,6 @@ if __name__ == '__main__':
       cmd.delete(0, tk.END)
       cmd.insert(0, history[pointer])
 
-  def write_response(text):
-    response.config(state="normal")
-    response.insert(tk.END, f"{text}")
-    response.config(state="disabled")
-  
-  def clear_response():
-    response.config(state="normal")
-    response.delete("1.0", "end")
-    response.config(state="disabled")
-  
   root = tk.Tk()
   root.geometry("569x343")
   root.title("User — client@users — ~ — -psh — 80x24")
