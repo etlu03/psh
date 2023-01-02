@@ -145,11 +145,11 @@ if __name__ == '__main__':
     for directory in dirs:
       for obj in cwd:
         if repr(obj) == directory:
+          write_response("mkdir: " + repr(obj) + ": File exists\n")
           break
       else:
         cwd.append(Directory(directory))
-
-    ls_command()
+        ls_command()
 
   def cd_command(command):
     actions = command.split()
@@ -233,7 +233,6 @@ if __name__ == '__main__':
         else:
           write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty")
         break
-
 
   def up_history(entry):
     global pointer
