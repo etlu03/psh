@@ -10,6 +10,7 @@ class Directory:
   def __repr__(self):
     return self.dir_name
 
+  # insert this function when a new file or directory is made
   def add_child(self, obj):
     self.children.append(obj)
 
@@ -48,6 +49,9 @@ def cache_login():
   with open("_cache/last_login", "w", encoding="utf-8") as f:
     f.write(login)
 
+################################################################################
+# @brief Playground shell main routine
+################################################################################
 if __name__ == '__main__':
   with open("_cache/last_login", "r", encoding="utf-8") as f:
     last_login = f.read()
@@ -58,8 +62,14 @@ if __name__ == '__main__':
   # @param[in] entry
   ##############################################################################
   def execute(entry):
-    clear_response()
     command = entry.widget.get()
+
+    if command.strip() == "":
+      return
+
+    create_history(command)
+    clear_response()
+
     if re.search(r"\bls\b", command):
       ls_command(command)
     elif re.search(r"\becho\b", command):
@@ -79,8 +89,7 @@ if __name__ == '__main__':
     else:
       write_response("psh: command not found: " + command)
     
-    create_history(command)
-    cmd.delete(0, tk.END)
+    entry.widget.delete(0, tk.END)
 
   ##############################################################################
   # @brief     Builds the command history
@@ -89,11 +98,12 @@ if __name__ == '__main__':
   def create_history(command):
     global history, pointer
     history.append(command)
-    pointer = len(history) - 1
-
+    
     if 5 < len(history):
       history.pop(0)
-  
+    
+    pointer = len(history) - 1
+      
   ##############################################################################
   # @brief List all the objects in the current working directory
   # @param[in] command
@@ -335,28 +345,13 @@ if __name__ == '__main__':
     response.config(state="disabled")
 
   ##############################################################################
-  # @brief     Decrements the `history` pointer and restores a previous command 
+  # @brief     
   # @param[in] entry
   ##############################################################################
-  def up_history(entry):
+  def manage_history(entry):
     global pointer
-    if 0 < pointer:
-      pointer -= 1
-
-      cmd.delete(0, tk.END)
-      cmd.insert(0, history[pointer])
-  
-  ##############################################################################
-  # @brief     Increments the `history` pointer and restores a previous command 
-  # @param[in] entry
-  ##############################################################################
-  def down_history(entry):
-    global pointer
-    if pointer < (len(history) - 1):
-      pointer += 1
-
-      cmd.delete(0, tk.END)
-      cmd.insert(0, history[pointer])
+    
+    print(history, pointer)
 
   root = tk.Tk()
   root.geometry("569x343")
@@ -373,6 +368,8 @@ if __name__ == '__main__':
   
   response.tag_config('is_directory', foreground="blue")
   response.tag_config('is_file', foreground="black")
+
+  response.config(state="disabled")
 
   cmd = tk.Entry(root,
                  width=70,
@@ -402,8 +399,8 @@ if __name__ == '__main__':
   path = [home]
 
   cmd.focus_set()
+
   cmd.bind("<Return>", execute)
-  cmd.bind("<Up>", up_history)
-  cmd.bind("<Down>", down_history)
+  cmd.bind("<Up>", manage_history)
   
   root.mainloop()
