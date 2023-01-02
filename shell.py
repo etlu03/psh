@@ -67,6 +67,8 @@ if __name__ == '__main__':
       cat_command(command)
     elif re.search(r"\brm\b", command):
       rm_command(command)
+    elif re.search(r"\b\b", command):
+      rmdir_command(command)
     else:
       write_response("psh: command not found: " + command)
       cmd.delete(0, tk.END)
@@ -195,20 +197,43 @@ if __name__ == '__main__':
       write_response("psh: file does not exist: " + file_name)
 
   def rm_command(command):
-    actions = command.split(maxsplit=1)
+    actions = command.split(maxsplit=2)
+    dir_name = actions[-1]
+    i = 0
+
+    if len(actions) == 2:
+      # `rm {dir_name}`
+      global cwd
+      while i < len(cwd):
+        if repr(cwd[i]) != dir_name:
+          i += 1
+        else:
+          if isinstance(cwd[i], Directory):
+            write_response("rm: cannot remove " + "'" +  repr(cwd[i]) + "' : Is a directory")
+          else:
+            cwd.pop(i)
+            ls_command()
+          break
+    else:
+      pass
+
+  def rmdir_command(command):
+    actions = command.split()
+    dir_name = actions[-1]
     i = 0
 
     global cwd
     while i < len(cwd):
-      if repr(cwd[i]) != actions[-1]:
+      if repr(cwd[i]) != dir_name:
         i += 1
       else:
-        if isinstance(cwd[i], Directory):
-          write_response("rm: cannot remove " + "'" +  repr(cwd[i]) + "' : Is a directory")
-        else:
+        if cwd[i].children == []:
           cwd.pop(i)
           ls_command()
+        else:
+          write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty")
         break
+
 
   def up_history(entry):
     global pointer
