@@ -100,7 +100,9 @@ if __name__ == '__main__':
   ##############################################################################
   def ls_command(command):
     actions = command.split(maxsplit=1)
+
     if len(actions) == 1:
+      # `ls`
       response.config(state="normal")
 
       for obj in cwd:
@@ -111,15 +113,19 @@ if __name__ == '__main__':
           response.insert(tk.END, f"{repr(obj)} ", "is_file")
 
       response.config(state="disabled")
+
       return
     
     response.config(state="normal")
+
     directories = actions[1].split()
-    for d in directories:
+
+    for directory in directories:
+      # `ls {directories}`
       for obj in cwd:
-        if repr(obj) == d:
+        if repr(obj) == directory:
           if isinstance(obj, Directory):
-            response.insert(tk.END, d + ":\n")
+            response.insert(tk.END, directory + ":\n")
             for child in obj.children:
               if isinstance(child, Directory):
                 response.insert(tk.END, f"{repr(child)} ", "is_directory")
@@ -129,10 +135,12 @@ if __name__ == '__main__':
             
             response.insert(tk.END, "\n")
           if isinstance(obj, File):
-            response.insert(tk.END, d, "is_file")
-            
+            response.insert(tk.END, directory, "is_file")
+          break
+      else:
+        write_response("ls: " + directory + ": No such file or directory")
+          
     response.config(state="disabled")
-
 
   ##############################################################################
   # @brief     Mimics the `echo` command on Unix-like systems
@@ -147,7 +155,7 @@ if __name__ == '__main__':
       global cwd
 
       content = redirection[0].strip()
-      file_name = redirection[-1].strip()
+      file_name = redirection[1].strip()
 
       content = re.sub(r"[\'\"]", "", content)
 
@@ -178,7 +186,7 @@ if __name__ == '__main__':
     files = actions[1:]
 
     global cwd
-    # `touch {files}``
+    # `touch {files}`
     for f in files:
       for obj in cwd:
         if repr(obj) == f:
@@ -192,10 +200,10 @@ if __name__ == '__main__':
   ##############################################################################
   def mkdir_command(command):
     actions = command.split()
-    dirs = actions[1:]
+    directories = actions[1:]
 
     global cwd
-    for directory in dirs:
+    for directory in directories:
       for obj in cwd:
         if repr(obj) == directory:
           write_response("mkdir: " + repr(obj) + ": File exists\n")
@@ -208,7 +216,7 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def cd_command(command):
-    actions = command.split()
+    actions = command.split(maxsplit=1)
     global cwd, path
 
     if 2 < len(actions):
@@ -223,22 +231,22 @@ if __name__ == '__main__':
       cwd = path[0].children
       return
 
-    if actions[-1] == "..":
+    if actions[1] == "..":
       # `cd ..`
       if len(path) != 1:
         path.pop()
         cwd = path[-1].children
       return
   
-    cd_dir = actions[-1]
+    cd_directory = actions[1]
     for obj in cwd:
-      # `cd {cd_dir}`
-      if repr(obj) == cd_dir:
+      # `cd {cd_directory}`
+      if repr(obj) == cd_directory:
         cwd = obj.children
         path.append(obj)
         break
     else:
-      write_response("cd: no such file or directory: " + cd_dir)
+      write_response("cd: no such file or directory: " + cd_directory)
 
   ##############################################################################
   # @brief     Mimics the `cat` command on Unix-like systems
@@ -246,7 +254,7 @@ if __name__ == '__main__':
   ##############################################################################
   def cat_command(command):
     actions = command.split(maxsplit=1)
-    file_name = actions[-1]
+    file_name = actions[1]
 
     global cwd
     for obj in cwd:
@@ -261,29 +269,31 @@ if __name__ == '__main__':
   # @param[in] command
   ##############################################################################
   def rm_command(command):
-    actions = command.split(maxsplit=2)
-    dirs = actions[1:]
-    print(dirs)
+    actions = command.split()
+    directories = actions[1:]
 
     global cwd
-    if dirs[0] != "-r":
-      # `rm {dir_names}`
-      for d in dirs:
+    if directories[0] != "-r":
+      # `rm {directories}`
+      for directory in directories:
         for i in range(len(cwd)):
-          if repr(cwd[i]) == d:
+          if repr(cwd[i]) == directory:
             if isinstance(cwd[i], Directory):
               write_response("rm: cannot remove " + repr(cwd[i]) + ": Is a directory\n")
             else:
               cwd.pop(i)
               break
+        else:
+          write_response("rm: " + directory + ": No such file or directory\n")
     else:
-      for d in dirs[1:]:
+      # `rm -r {dir_names}`
+      for directory in  directories[1:]:
         for i in range(len(cwd)):
-          if repr(cwd[i]) == d:
+          if repr(cwd[i]) == directory:
             cwd.pop(i)
             break
         else:
-          write_response("rm: " + d + ": No such file or directory\n")
+          write_response("rm: " + directory + ": No such file or directory\n")
 
   ##############################################################################
   # @brief     Mimics the `rmdir` command on Unix-like systems
@@ -291,19 +301,21 @@ if __name__ == '__main__':
   ##############################################################################
   def rmdir_command(command):
     actions = command.split()
-    dir_name = actions[-1]
+    directories = actions[1:]
     i = 0
 
     global cwd
-    while i < len(cwd):
-      if repr(cwd[i]) != dir_name:
-        i += 1
-      else:
-        if cwd[i].children == []:
-          cwd.pop(i)
-        else:
-          write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty")
-        break
+    for directory in directories:
+      for i in range(len(cwd)):
+        if repr(cwd[i]) == directory:
+          if isinstance(cwd[i], Directory):
+            if cwd[i].children == []:
+              write_response("rmdir: " + repr(cwd[i]) + ": Directory not empty\n")
+            else:
+              cwd.pop(i)
+              break
+          else:
+            write_response("rmdir: " + repr(cwd[i]) + ": Not a directory\n")
 
   ##############################################################################
   # @brief     Write `text` to the response text widget
