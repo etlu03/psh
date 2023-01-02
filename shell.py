@@ -65,11 +65,14 @@ if __name__ == '__main__':
       cd_command(command)
     elif re.search(r"\bcat\b", command):
       cat_command(command)
+    elif re.search(r"\brm\b", command):
+      rm_command(command)
     else:
       write_response("psh: command not found: " + command)
   
   def ls_command():
     response.config(state="normal")
+
     for obj in cwd:
       if isinstance(obj, Directory):
         response.insert(tk.END, f"{repr(obj)} ", "is_directory")
@@ -77,7 +80,9 @@ if __name__ == '__main__':
       if isinstance(obj, File):
         response.insert(tk.END, f"{repr(obj)} ", "is_file")
       
-    response.delete("end-2c")
+      if path != [home]:
+        response.insert(tk.END, "\n")
+
     response.config(state="disabled")
 
   def echo_command(command):
@@ -87,7 +92,8 @@ if __name__ == '__main__':
     if len(redirection) == 2:
       content = redirection[0].strip()
       file_name = redirection[-1].strip()
-      print(content)
+
+      content = re.sub(r"[\'\"]", "", content)
 
       global cwd
       for obj in cwd:
@@ -179,6 +185,22 @@ if __name__ == '__main__':
         break
     else:
       write_response("psh: file does not exist: " + file_name)
+
+  def rm_command(command):
+    actions = command.split(maxsplit=1)
+    i = 0
+
+    global cwd
+    while i < len(cwd):
+      if repr(cwd[i]) != actions[-1]:
+        i += 1
+      else:
+        if isinstance(cwd[i], Directory):
+          write_response("rm: cannot remove " + "'" +  repr(cwd[i]) + "' : Is a directory")
+        else:
+          cwd.pop(i)
+          ls_command()
+        break
 
   def write_response(text):
     response.config(state="normal")
