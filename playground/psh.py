@@ -286,7 +286,7 @@ if __name__ == '__main__':
         else:
           write_response("rm: " + directory + ": No such file or directory\n")
     else:
-      # `rm -r {dir_names}`
+      # `rm -r {directories}`
       for directory in  directories[1:]:
         for i in range(len(cwd)):
           if repr(cwd[i]) == directory:
