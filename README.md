@@ -6,7 +6,7 @@ The `psh` is an interactive GUI written in the Python Programming Language meant
 The `psh` supports the following Unix-like operating system commands:
 ```c
 ls    [file ... | directory ...]
-echo  [>>] [string ...]
+echo  [string ...] [>>] [file]
 touch [file ...]
 mkdir [directory ...]
 cd    [directory]
