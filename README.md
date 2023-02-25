@@ -1,5 +1,5 @@
 ## The Playground Shell
-The `psh` is an interactive GUI written in the Python Programming Language meant to simulate `zsh`. `touch` multiple files, `cd` into different directories, and `echo` funny messages are all things you can do in the `psh` without accidently ruining your own personal machine.
+The `psh` is an interactive GUI written in the Python Programming Language meant to simulate `zsh`. `touch` multiple files, `cd` into different directories, and `echo` funny messages are all things you can do in the `psh` without accidentally ruining your own personal machine.
 
 
 ## Documentation
